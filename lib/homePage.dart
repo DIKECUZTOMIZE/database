@@ -1,23 +1,37 @@
 import 'dart:math';
 import 'package:database/dbHelper.dart';
+import 'package:database/model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-class HomePage extends StatefulWidget{
+
+class HomePage extends StatefulWidget {
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  DbHelper dbHelper=DbHelper.getInstance();
+  DbHelper dbHelper = DbHelper.getInstance();
 
-  var titleController =TextEditingController();
-  var descController =TextEditingController();
-  List<Map< String, dynamic>> mData=[];
- //String dueDate='';
- bool isCheck=false;
+  var titleController = TextEditingController();
+  var descController = TextEditingController();
+  List<NoteModel> mData = [];
+  String dueDate='';
+  DateFormat dtFormat=DateFormat.MMMEd();
 
- ///  variablre date formate with pakage (intl)
- //DateFormat dateFormat=DateFormat.MMMEd();
+  List<Color> myColors=[
+    Colors.green,
+    Colors.orange,
+    Colors.blueAccent,
+    Colors.purple,
+    Colors.yellowAccent,
+    Colors.lightGreen,
+    Colors.greenAccent,
+    Colors.lightGreenAccent,
+    Colors.purpleAccent,
+    Colors.teal,
+  ];
+  ///  variablre date formate with pakage (intl)
+  //DateFormat dateFormat=DateFormat.MMMEd();
 
   @override
   void initState() {
@@ -25,124 +39,132 @@ class _HomePageState extends State<HomePage> {
     super.initState();
   }
 
-  void  getNotes()async{
-  mData= await dbHelper.fectNote();
-  setState(() {});
+  void getNotes() async {
+    mData = await dbHelper.fectNote();
+    setState(() {});
   }
+
   @override
   Widget build(BuildContext context) {
-     return Scaffold(
-       appBar: AppBar(
-         centerTitle: true,
-         title: Text('Home Page'),
-       ),
-       body: mData.isNotEmpty ?  ListView(
-         children: [
+    return Scaffold(
+      backgroundColor: Colors.white12,
+      appBar: AppBar(
+      backgroundColor: Colors.white12,
+        title: Text('My Note',style: TextStyle(color: Colors.white70,fontWeight:FontWeight.bold,
+        fontSize: 30),),
+      ),
+      body: mData.isNotEmpty
+          ? ListView(children: [
+              SizedBox(
+                height: 900,
+                child: GridView.builder(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 5 / 6,
+                    
+                    ),
+                    itemCount: mData.length,
+                    itemBuilder: (context, index) => Padding(padding: EdgeInsets.all(5),
+                      child: Container(
+                        padding: EdgeInsets.all(21),
+                            height: 100,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              borderRadius:BorderRadius.all(Radius.circular(21)),
+                                color:myColors[myColors.length-1]
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween
+                                  ,
+                                  children: [
+                                    Text(mData[index].tilte,style: TextStyle(
+                                      fontSize: 25,color: Colors.black
+                                    ),),
+                      
+                                    Column(
+                                      children: [
+                                        InkWell(
+                                          onTap: () {
+                                            titleController.text = mData[index].tilte;
+                                            descController.text = mData[index].desc;
+                      
+                                            showModalBottomSheet(context: context, builder: (context) {
+                                              return getSheetButtom(isUpdate: true, ID: mData[index].id!);
+                                            },
+                                            );
+                                          },
+                                          child: Icon(Icons.edit,color: Colors.white,),
+                                        ),
+                                        SizedBox(
+                                          height: 11,
+                                        ),
 
-           SizedBox(
-             height: 100,
-             child: GridView.builder(gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-               crossAxisCount:2,
-               childAspectRatio: 5/5,
-               crossAxisSpacing: 2,
-               mainAxisSpacing: 2,
-             ),itemCount: mData.length,
-               itemBuilder: (context, index) =>Container(
-                 height:100 ,
-                 width: double.infinity,
-                 decoration: BoxDecoration(
-                   color: Colors.primaries[Random().nextInt(Colors.primaries.length,)]
-                 ),
-                 child: Column(
-                   children: [
+                                        InkWell(
+                                          onTap: () async {
+                                            bool check = await dbHelper.deletNote(
+                                                deletID: mData[index].id!);
+                                            if (check) {
+                                              getNotes();
+                                            }
+                                          },
+                                          child: Icon(Icons.delete,color: Colors.red,),
+                                        ),
+                                      ],
+                                    )
+                                  ],
+                                ),
+                                SizedBox(
+                                  height: 11,
+                                ),
+                      
+                                Text(mData[index].desc,style: TextStyle(color:Colors.black,
+                                fontSize: 20),),
 
-                     Row(
-                       children: [
-                        Checkbox(value: isCheck, onChanged:(value){
-                          isCheck=true;
-                          setState(() {});
-                        },),
+                                SizedBox(
+                                  height: 11,
+                                ),
 
-                         SizedBox(
-                           width: 11,
-                         ),
+                                Text(dtFormat.format(DateTime.fromMillisecondsSinceEpoch(int.parse(mData[index].created_at)))) ,
+                      
+                              ],
+                            ),
+                          ),
+                    )),
+              )
+            ])
+          : Center(child: Text('Not Add Note')),
 
-                         Text(mData[index][DbHelper.NOTE_COLUMN_TITLE]),
-                       ],
-                     ),
-                     SizedBox(
-                       height: 11,
-                     ),
-
-                     Text(mData[index][DbHelper.NOTE_COLUMN_DESC]),
-
-                     SizedBox(
-                       height: 11,
-
-                     ),
-
-                    //  Text(mData[index][DbHelper.NOTE_COLUMN_CREATED_AT]),
-
-                     Row(
-                       children: [
-                         InkWell(
-                           onTap: (){
-                             titleController.text=mData[index][DbHelper.NOTE_COLUMN_TITLE];
-                             descController.text=mData[index][DbHelper.NOTE_COLUMN_DESC];
-
-                             showModalBottomSheet(context: context, builder: (context) {
-                             return getSheetButtom(isUpdate: true ,matchID: mData[index][DbHelper.NOTE_COLUMN_ID]);
-                             },);
-
-                           },
-                           child: Icon(Icons.edit),
-                         ),
-
-                         SizedBox(
-                           width: 11,
-                         ),
-
-                         InkWell(
-                           onTap: ()async{
-                            bool check=await dbHelper.deletNote(deletID:mData[index][DbHelper.NOTE_COLUMN_ID]);
-                           if (check){
-                             getNotes();
-                           }
-
-                            },
-                           child: Icon(Icons.delete),
-                         ),
-                       ],
-                     )
-                   ],
-                 ),
-               )  ),
-           )
-         ]
-       ):
-       Center(child: Text('Not Add Note')),
-
-        floatingActionButton: FloatingActionButton(onPressed: (){
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
           titleController.clear();
-          descController.text='';
-          showModalBottomSheet(context: context, builder: (_)=>
-          getSheetButtom());
-        },child: Text('Note',textAlign: TextAlign.center,),),
-
-     );
+          descController.text = '';
+          showModalBottomSheet(context: context, builder: (_) => getSheetButtom());
+        },
+        child: Text(
+          'Note',
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
   }
 
-  Widget getSheetButtom({isUpdate = false, int matchID=0}){
+  Widget getSheetButtom({isUpdate = false, int ID = 0}) {
     return Container(
       height: 350,
       width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white70,
       ),
-
       child: Column(
         children: [
-          Text('Add Note',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
+
+          Text(
+            isUpdate ?'Update Note':'Add Note',
+            style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+          ),
 
           SizedBox(
             height: 11,
@@ -156,17 +178,16 @@ class _HomePageState extends State<HomePage> {
             height: 11,
           ),
 
-         // Date Time:
-         //  SizedBox(
-         //    width: 100,
-         //    child: OutlinedButton(onPressed:  ()async{
-         //      DateTime? selecteDate=await showDatePicker(context: context,
-         //          firstDate: DateTime.now(),
-         //          lastDate: DateTime(9999));
-         //    //  print(selecteDate!. millisecondsSinceEpoch.toString());
-         //      dueDate=selecteDate!.millisecondsSinceEpoch.toString();
-         //    }, child: Text("Date")),
-         //  ),
+          SizedBox(
+            width: 100,
+            child: OutlinedButton(onPressed: ()async{
+             DateTime? selected=await showDatePicker(context: context,
+                  firstDate:DateTime.now(),
+                  lastDate: DateTime(9999));
+             print(selected!.millisecondsSinceEpoch.toString());
+              dueDate= selected.millisecondsSinceEpoch.toString();
+            } , child:Text('Date')),
+          ),
 
           TextField(
             controller: descController,
@@ -179,50 +200,45 @@ class _HomePageState extends State<HomePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              OutlinedButton(onPressed: ()async{
-                if(titleController.text.isNotEmpty && descController.text.isNotEmpty){
+              OutlinedButton(
+                  onPressed: () async {
+                    if (titleController.text.isNotEmpty && descController.text.isNotEmpty) {
+                      bool check=false;
 
-                  if(isUpdate){
-                    bool check= await dbHelper.updateNote(
-                        title: titleController.text,
-                        desc: descController.text,
-                        updateId:matchID);
-                    if(check){
-                      getNotes();
-                      Navigator.pop(context);
+                      if (isUpdate) {
+                        check = await dbHelper.updateNote(
+                            title: titleController.text,
+                            desc: descController.text,
+                            updateId: ID);
+                        }
+                        else {
+                         check = await dbHelper.addNote(NoteModel(
+                            tilte: titleController.text,
+                            desc: descController.text,
+                            created_at:dueDate ,
+                         ));
+                        }
+
+                        if(check){
+                          Navigator.pop(context);
+                          getNotes();
+                        }
                     }
-                  }
-                  else{
-                    bool check=await dbHelper.addNote(
-                        title: titleController.text,
-                        desc: descController.text,
-                       // date: dueDate
-                    );
-                    if(check){
-                      getNotes();
-                      Navigator.pop(context);
-                    }
-                  }
-                } else{
-                  Navigator.pop(context);
-                }
-
-              }, child: Text('Add')),
-
+                  },
+                  child: Text(isUpdate ? 'Upadte':'Add')),
               SizedBox(
                 width: 11,
               ),
 
-              OutlinedButton(onPressed: (){
-                Navigator.pop(context);
-              }, child: Text('Cancel')),
+              OutlinedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text('Cancel')),
             ],
           )
         ],
       ),
     );
   }
-
-
-
 }

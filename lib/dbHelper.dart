@@ -1,3 +1,4 @@
+import 'package:database/model.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
@@ -13,8 +14,8 @@ class DbHelper{
   static const NOTE_COLUMN_ID='n_id';
   static const NOTE_COLUMN_TITLE='n_title';
   static const NOTE_COLUMN_DESC='n_desc';
-   // static const NOTE_COLUMN_CREATED_AT='n_created_at';
-   // static const NOTE_COLUMN_COMPLETED_AT='n_completed_at';
+  static const NOTE_COLUMN_CREATED_AT='n_created_at';
+
 
   Future<Database>  initDB()async{
 
@@ -41,27 +42,29 @@ class DbHelper{
     var dbPath=join(dirPath.path,'noteDB.db');
 
     return openDatabase(dbPath,version: 1,onCreate: (db, version) {
-      db.execute('create table $NOTE_TABLE ( $NOTE_COLUMN_ID integer primary key autoicrement, $NOTE_COLUMN_TITLE text, $NOTE_COLUMN_DESC text,)');
+      db.execute('create table $NOTE_TABLE ( $NOTE_COLUMN_ID integer primary key autoincrement, $NOTE_COLUMN_TITLE text, $NOTE_COLUMN_DESC text, $NOTE_COLUMN_CREATED_AT text)');
     },);
 
   }
 
   /// Insert:
-  Future<bool> addNote ({ required String title , required String desc})async{
+  Future<bool> addNote (NoteModel newNote)async{
     Database db=await initDB();
-    int rowsEffected=await db.insert(NOTE_TABLE, {
-       NOTE_COLUMN_TITLE:title,
-      NOTE_COLUMN_DESC:desc,
-      // NOTE_COLUMN_CREATED_AT:DateTime.now().millisecondsSinceEpoch.toString(),
-      // NOTE_COLUMN_COMPLETED_AT:date,
-    });
+    int rowsEffected=await db.insert(NOTE_TABLE, newNote.toMap()
+    );
     return rowsEffected > 0;
   }
   /// select:
-  Future<List<Map<String , dynamic>>> fectNote ()async{
+  Future<List<NoteModel>> fectNote ()async{
     Database db=await initDB();
     List<Map<String,dynamic>> allNote= await db.query(NOTE_TABLE);
-    return allNote;
+
+    List<NoteModel> newNote=[];
+    for(Map<String,dynamic> eachData in allNote) {
+      NoteModel eachNote = NoteModel.fromMap(eachData);
+      newNote.add(eachNote);
+    }
+    return newNote;
 
   }
   /// update:
