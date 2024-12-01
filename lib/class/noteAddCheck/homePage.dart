@@ -2,7 +2,7 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:database/noteAddCheck//dbHelperSan.dart';
+import 'package:database/class/noteAddCheck//dbHelperSan.dart';
 
 class HomePage1 extends StatelessWidget{
 
