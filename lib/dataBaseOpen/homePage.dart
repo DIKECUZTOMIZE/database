@@ -2,7 +2,7 @@ import 'package:database/dataBaseOpen/dbHelper.dart';
 import 'package:database/dataBaseOpen/note_Model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+
 
 class HomePage extends StatefulWidget {
   @override
@@ -20,7 +20,7 @@ class _HomePageState extends State<HomePage> {
 
   String dueDate = '';
 
-  DateFormat dtFormate = DateFormat.MMMEd();
+ // DateFormat dtFormate = DateFormat.MMMEd();
 
   @override
   void initState() {
@@ -56,8 +56,8 @@ class _HomePageState extends State<HomePage> {
                         height: 11,
                       ),
 
-                      Text(dtFormate.format(DateTime.fromMillisecondsSinceEpoch(
-                          int.parse(mData[index].createdAt))))
+                      // Text(dtFormate.format(DateTime.fromMillisecondsSinceEpoch(
+                      //     int.parse(mData[index].createdAt))))
                       // Text(dtFormate.format(DateTime.fromMillisecondsSinceEpoch(int.parse(mData[index][DbHelper.TABLE_CREATED_AT])))),
                     ],
                   ),
